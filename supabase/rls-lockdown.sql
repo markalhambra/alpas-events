@@ -24,6 +24,8 @@ ALTER TABLE IF EXISTS public.event_feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.bulk_import_jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.email_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.waitlist ENABLE ROW LEVEL SECURITY;
+-- Prisma implicit many-to-many join (Event <> AdminUser)
+ALTER TABLE IF EXISTS public."_EventAdmins" ENABLE ROW LEVEL SECURITY;
 
 -- Do NOT use FORCE ROW LEVEL SECURITY here: Prisma connects as the table owner
 -- (postgres / pooler role) and must keep bypassing RLS. PostgREST uses anon /
@@ -51,11 +53,13 @@ BEGIN
     'event_feedback',
     'bulk_import_jobs',
     'email_logs',
-    'waitlist'
+    'waitlist',
+    '_EventAdmins'
   ]
   LOOP
     IF to_regclass('public.' || t) IS NOT NULL THEN
       EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', t);
+      EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC', t);
       -- No policies for anon/authenticated ⇒ default deny when RLS is on
     END IF;
   END LOOP;

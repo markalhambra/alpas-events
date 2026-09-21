@@ -10,9 +10,12 @@
 ## Required Supabase dashboard steps
 
 1. Open **SQL Editor** and run [`supabase/rls-lockdown.sql`](supabase/rls-lockdown.sql).
+   - Covers all Prisma app tables **and** the implicit join table `"_EventAdmins"`.
+   - Enables RLS with **no** anon/authenticated policies (default deny) and revokes table grants.
 2. **Authentication → Providers → Email:** turn **off** public sign-up (admins are created via app/script).
 3. Confirm `SUPABASE_SERVICE_ROLE_KEY` and `DATABASE_URL` are **server-only** (Vercel env, never `NEXT_PUBLIC_`).
 4. Storage bucket `email-assets`: public **read** OK for QR/images; no anon write.
+5. After schema changes that add tables/joins, re-run the lockdown SQL (or confirm RLS is on in **Database → Tables**).
 
 ## App protections added
 

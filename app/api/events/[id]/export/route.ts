@@ -35,6 +35,7 @@ export async function GET(
         category: true,
         rsvpStatus: true,
         attendanceStatus: true,
+        dietaryPreference: true,
         plusOnes: { select: { name: true, checkedIn: true } },
         createdAt: true,
       },
@@ -50,6 +51,7 @@ export async function GET(
       "Category": g.category,
       "RSVP Status": g.rsvpStatus,
       "Attendance Status": g.attendanceStatus,
+      "Dietary Preference": g.dietaryPreference ?? "",
       "Plus-One Names": g.plusOnes.map((p) => p.name).join(", "),
       "Plus-Ones Checked In": g.plusOnes.filter((p) => p.checkedIn).map((p) => p.name).join(", "),
       "Registered At": g.createdAt.toISOString(),
@@ -66,6 +68,7 @@ export async function GET(
         rsvpStatus: true,
         attendanceStatus: true,
         attendanceMarkedAt: true,
+        dietaryPreference: true,
         plusOnes: { select: { name: true, checkedIn: true, checkedInAt: true } },
       },
     });
@@ -78,6 +81,7 @@ export async function GET(
       "RSVP Status": g.rsvpStatus,
       "Attendance Status": g.attendanceStatus,
       "Checked In At": g.attendanceMarkedAt ? g.attendanceMarkedAt.toISOString() : "",
+      "Dietary Preference": g.dietaryPreference ?? "",
       "Plus-One Names": g.plusOnes.map((p) => p.name).join(", "),
       "Plus-Ones Checked In": g.plusOnes.filter((p) => p.checkedIn).map((p) => p.name).join(", "),
     }));
@@ -92,6 +96,7 @@ export async function GET(
         email: true,
         mobile: true,
         category: true,
+        dietaryPreference: true,
         plusOnes: { select: { name: true } },
       },
     });
@@ -103,6 +108,7 @@ export async function GET(
       "Email": g.email ?? "",
       "Mobile": g.mobile ?? "",
       "Category": g.category,
+      "Dietary Preference": g.dietaryPreference ?? "",
       "Plus-One Names": g.plusOnes.map((p) => p.name).join(", "),
     }));
   } else {
