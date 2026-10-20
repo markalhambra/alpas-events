@@ -26,13 +26,13 @@
 
 ## Free plan pause (keep-alive)
 
-Supabase **Free** still pauses after **~1 week of inactivity**. Keep-alive **reduces** idle risk; only **Pro+** guarantees no pause.
+Supabase **Free** may pause a project with too little database activity over **7 days**. One query a day can still be too little. Keep-alive **reduces** that risk; only **Pro+** guarantees no pause. There is no dashboard switch that disables it on Free.
 
 ### Vercel Cron
 
-Vercel Cron can call `GET /api/cron/keep-alive` if you add a once-per-day schedule in the project Cron Jobs settings or `vercel.json` (Hobby: max once/day, e.g. `0 12 * * *`). Cron entries that run more often **fail the deployment** on Hobby.
+Vercel Cron calls `GET /api/cron/keep-alive` once a day from [`vercel.json`](vercel.json) (`0 12 * * *`). Hobby allows at most one run per day; a more frequent expression **fails the deployment**.
 
-If deploy validation rejects crons for your plan/team, use GitHub Actions ([`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml)) or `npm run db:keep-alive` instead.
+That single run is not enough on its own. GitHub Actions ([`.github/workflows/keep-alive.yml`](.github/workflows/keep-alive.yml)) also pings at 01:15, 09:15, and 17:15 UTC. `npm run db:keep-alive` is the manual equivalent.
 
 Set in Vercel project env:
 
@@ -53,7 +53,7 @@ NEXT_PUBLIC_APP_URL=https://your-production-url
 npm run db:keep-alive
 ```
 
-Schedule every 1–3 days (Task Scheduler, cron, GitHub Actions).
+If GitHub Actions is not available, schedule that command a few times per day. The workflow does nothing until repository secrets `KEEP_ALIVE_URL` and `CRON_SECRET` are set, and GitHub disables scheduled workflows after 60 days without repository activity.
 
 ### Production recommendation
 

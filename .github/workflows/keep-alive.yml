@@ -1,11 +1,14 @@
-# Optional external keep-alive if Vercel Cron is unavailable (Hobby limits, etc.).
+# Best-effort Free-plan keep-alive. Supabase may still pause a project that
+# has only one query per day. Vercel Hobby allows one cron per day, so this
+# workflow adds three more database pings, staggered away from 12:00 UTC.
 # Set repo secrets: KEEP_ALIVE_URL, CRON_SECRET
+# Scheduled runs also stop if the repository has no activity for 60 days.
 name: Supabase keep-alive
 
 on:
   schedule:
-    # Every 2 days at 12:00 UTC — well under Free-plan ~7 day idle pause
-    - cron: "0 12 */2 * *"
+    # 01:15, 09:15, and 17:15 UTC — a few requests each day.
+    - cron: "15 1,9,17 * * *"
   workflow_dispatch:
 
 jobs:
@@ -22,4 +25,8 @@ jobs:
             echo "Set KEEP_ALIVE_URL and CRON_SECRET repository secrets."
             exit 1
           fi
-          curl -fsS -H "Authorization: Bearer ${CRON_SECRET}" -H "Accept: application/json" "${KEEP_ALIVE_URL}"
+          curl --fail-with-body --silent --show-error --max-time 30 \
+            --retry 3 --retry-delay 5 --retry-all-errors \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Accept: application/json" \
+            "${KEEP_ALIVE_URL}"

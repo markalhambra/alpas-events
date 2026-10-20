@@ -6,8 +6,8 @@
  *   node scripts/keep-alive.js
  *   KEEP_ALIVE_URL=https://your-app.vercel.app/api/cron/keep-alive CRON_SECRET=... node scripts/keep-alive.js
  *
- * Schedule with Windows Task Scheduler, cron, or GitHub Actions every 1–3 days
- * (well under Supabase Free's ~7-day inactivity pause).
+ * Schedule a few times per day. One ping a day can still look inactive to
+ * Supabase Free. Only a paid plan guarantees the project will not pause.
  *
  * Requires CRON_SECRET to match the value deployed on the app.
  */

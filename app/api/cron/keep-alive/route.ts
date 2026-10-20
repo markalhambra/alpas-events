@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 /**
- * Vercel Cron keep-alive: light Postgres ping so free-tier Supabase
- * does not pause after ~7 days of inactivity.
+ * Light Postgres ping for Supabase Free. A few successful calls per day
+ * usually count as activity; this does not guarantee the project stays up.
+ * Only a paid plan disables inactivity pausing.
  *
  * Auth: Authorization: Bearer <CRON_SECRET>
  * Vercel Cron sends this automatically when CRON_SECRET is set on the project.
