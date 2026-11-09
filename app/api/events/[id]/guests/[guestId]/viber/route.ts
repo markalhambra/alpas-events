@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateToken, formatDate, formatDateTime } from "@/lib/utils";
-import { buildRsvpUrl } from "@/lib/qr";
 import {
+  buildShortRsvpUrl,
   buildViberChatUrl,
+  buildViberDraft,
   buildViberInvitationMessage,
   formatViberNumber,
   toViberNumber,
@@ -49,20 +50,25 @@ export async function POST(_: NextRequest, { params }: Params) {
     const expired = !!existing?.tokenExpiresAt && existing.tokenExpiresAt < now;
 
     let token = existing && !expired ? existing.token : generateToken(48);
+    let shortCode = existing && !expired ? existing.shortCode : null;
 
     if (!existing || expired) {
       const created = await createInvitation({
         eventId,
         guestId: guest.id,
         token,
+        shortCode: generateToken(8),
         tokenExpiresAt: event.rsvpDeadline,
         sentAt: now,
       });
       token = created.token;
+      shortCode = created.shortCode;
     } else {
+      if (!shortCode) shortCode = generateToken(8);
       await prisma.invitation.update({
         where: { id: existing.id },
         data: {
+          shortCode,
           sentAt: existing.sentAt ?? now,
           resendCount: existing.sentAt ? existing.resendCount + 1 : existing.resendCount,
           lastResentAt: existing.sentAt ? now : existing.lastResentAt,
@@ -72,8 +78,8 @@ export async function POST(_: NextRequest, { params }: Params) {
       });
     }
 
-    const rsvpUrl = buildRsvpUrl(token);
-    const message = buildViberInvitationMessage({
+    const rsvpUrl = buildShortRsvpUrl(shortCode ?? token);
+    const invite = {
       guestName: guest.fullName,
       salutation: guest.salutation,
       eventName: event.name,
@@ -82,7 +88,9 @@ export async function POST(_: NextRequest, { params }: Params) {
       venue: event.venue,
       rsvpDeadline: formatDateTime(event.rsvpDeadline),
       rsvpUrl,
-    });
+    };
+    const message = buildViberInvitationMessage(invite);
+    const draft = buildViberDraft(invite);
     const phone = formatViberNumber(viberDigits);
 
     await Promise.all([
@@ -107,7 +115,8 @@ export async function POST(_: NextRequest, { params }: Params) {
     return NextResponse.json({
       phone,
       message,
-      viberUrl: buildViberChatUrl(viberDigits, message),
+      draft,
+      viberUrl: buildViberChatUrl(viberDigits, draft),
     });
   } catch {
     return NextResponse.json({ error: "Failed to prepare Viber invite" }, { status: 500 });
@@ -118,6 +127,7 @@ async function createInvitation(data: {
   eventId: string;
   guestId: string;
   token: string;
+  shortCode: string;
   tokenExpiresAt: Date;
   sentAt: Date;
 }) {

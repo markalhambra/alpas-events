@@ -276,6 +276,7 @@ model Invitation {
 
   method          InvitationMethod
   token           String           @unique // Tokenized URL for accept/decline actions
+  shortCode       String?          @unique @db.VarChar(12) // Short RSVP code for Viber's 100-character draft
   tokenExpiresAt  DateTime?
 
   sentAt          DateTime?

@@ -47,6 +47,53 @@ export function formatViberNumber(digits: string): string {
   return `+${digits}`;
 }
 
+/** Viber's chat draft keeps only the first 100 characters. */
+export const VIBER_DRAFT_LIMIT = 100;
+
+export function buildShortRsvpUrl(shortCode: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return `${appUrl}/r/${shortCode}`;
+}
+
+function clockTime(eventDate: string, eventTime: string): string {
+  if (eventTime.startsWith(eventDate)) return eventTime.slice(eventDate.length).trim();
+  return eventTime;
+}
+
+function shortDay(value: string): string {
+  return value.replace(/,?\s+\d{4}/, "").trim();
+}
+
+/**
+ * A draft Viber will actually insert. The RSVP link is always included.
+ * Longer wording is dropped until the text fits the 100-character limit.
+ */
+export function buildViberDraft(data: ViberInvitationInput): string {
+  const url = data.rsvpUrl.trim();
+  const title = data.salutation ? SALUTATION_LABEL[data.salutation] ?? "" : "";
+  const named = [title, data.guestName].filter(Boolean).join(" ");
+  const time = clockTime(data.eventDate, data.eventTime);
+  const when = [shortDay(data.eventDate), time].filter(Boolean).join(" ");
+  const where = data.venue.trim();
+  const deadline = shortDay(data.rsvpDeadline);
+  const attempts = [
+    [`Hi ${named} — ${data.eventName}`, [when, where].filter(Boolean).join(", "), deadline ? `RSVP by ${deadline}` : ""],
+    [`Hi ${data.guestName} — ${data.eventName}`, [when, where].filter(Boolean).join(", ")],
+    [`${named} — ${data.eventName}`, [when, where].filter(Boolean).join(", ")],
+    [`${data.guestName}, ${data.eventName}`, when],
+    [`${data.eventName}`, when],
+    [data.eventName],
+    [],
+  ];
+
+  for (const lines of attempts) {
+    const text = [...lines.map((line) => line.trim()).filter(Boolean), url].join("\n");
+    if (url && text.length <= VIBER_DRAFT_LIMIT) return text;
+  }
+
+  return url.length <= VIBER_DRAFT_LIMIT ? url : url.slice(-VIBER_DRAFT_LIMIT);
+}
+
 export function buildViberInvitationMessage(data: ViberInvitationInput): string {
   const title = data.salutation ? SALUTATION_LABEL[data.salutation] ?? data.salutation : "";
   const greeting = [title, data.guestName].filter(Boolean).join(" ");
@@ -69,10 +116,8 @@ export function buildViberInvitationMessage(data: ViberInvitationInput): string 
  * Viber's documented share link (`viber://forward?text=`) prefills text but
  * cannot target a number, and trims text to 200 characters.
  */
-export function buildViberChatUrl(internationalDigits: string, text: string): string {
-  const encoded = encodeURIComponent(text);
-  // `text` and `draft` are both sent. Viber officially prefills text only on
-  // viber://forward, which cannot target a number. Some app builds read one of
-  // these params on viber://chat; others ignore them.
-  return `viber://chat?number=%2B${internationalDigits}&text=${encoded}&draft=${encoded}`;
+export function buildViberChatUrl(internationalDigits: string, draft: string): string {
+  // Only `draft` is sent. A `text` param is capped at 100 characters and was
+  // cutting the invite off before the RSVP link.
+  return `viber://chat?number=%2B${internationalDigits}&draft=${encodeURIComponent(draft)}`;
 }

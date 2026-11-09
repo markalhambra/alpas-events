@@ -77,7 +77,7 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
   const [rsvpFilter, setRsvpFilter] = useState("ALL");
   const [addOpen, setAddOpen] = useState(false);
   const [editGuest, setEditGuest] = useState<Guest | null>(null);
-  const [viberInvite, setViberInvite] = useState<{ phone: string; message: string; viberUrl: string } | null>(null);
+  const [viberInvite, setViberInvite] = useState<{ phone: string; message: string; draft: string; viberUrl: string } | null>(null);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactQuery, setContactQuery] = useState("");
   const [contactResults, setContactResults] = useState<Array<{ id: string; fullName: string; email: string; company: string; designation: string }>>([]);
@@ -176,12 +176,17 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
       copied = false;
     }
 
-    setViberInvite({ phone: data.phone, message: data.message, viberUrl: data.viberUrl });
+    setViberInvite({
+      phone: data.phone,
+      message: data.message,
+      draft: data.draft ?? data.message,
+      viberUrl: data.viberUrl,
+    });
     openViberApp(data.viberUrl);
     toast.success(`Viber opened for ${data.phone}`, {
       description: copied
-        ? "The invitation is ready to send. If the message box is empty, paste it."
-        : "If the message box is empty, use Open Viber again and allow clipboard access.",
+        ? "Viber only inserts 100 characters, so the chat has a short invite with the RSVP link. The full invitation is copied if you want to paste it."
+        : "Viber only inserts 100 characters. Use Copy message for the full invitation.",
     });
     router.refresh();
   }
@@ -440,9 +445,11 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
             <DialogTitle>Viber invite for {viberInvite?.phone}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Viber should open a chat with this number and the invitation ready to send.
-            If the message box is empty, paste the text below.
+            Viber only inserts the first 100 characters, so the chat opens with this short invite and the RSVP link. Paste the full invitation below if you want every line.
           </p>
+          <pre className="whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs">
+            {viberInvite?.draft}
+          </pre>
           <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs">
             {viberInvite?.message}
           </pre>
