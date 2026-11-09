@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { RsvpForm } from "@/components/rsvp-form";
+import { CalendarLinks } from "@/components/calendar-links";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import { CalendarDays, MapPin, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -19,6 +21,9 @@ export default async function RsvpPage({ params }: PageProps) {
         select: {
           id: true,
           fullName: true,
+          email: true,
+          company: true,
+          mobile: true,
           salutation: true,
           rsvpStatus: true,
           declineReason: true,
@@ -100,15 +105,30 @@ export default async function RsvpPage({ params }: PageProps) {
                     : "Your response has been recorded. Thank you for letting us know."}
                 </p>
                 {invitation.guest.rsvpStatus === "ACCEPTED" && (
-                  <p className="text-sm text-muted-foreground">
-                    You have already accepted this invitation.
-                  </p>
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      You have already accepted this invitation.
+                    </p>
+                    <CalendarLinks
+                      googleUrl={buildGoogleCalendarUrl({
+                        title: invitation.event.name,
+                        start: invitation.event.startTime,
+                        end: invitation.event.endTime,
+                        location: invitation.event.venue,
+                        description: `You're confirmed for ${invitation.event.name}.`,
+                      })}
+                      icsUrl={`/api/rsvp/${token}/calendar`}
+                    />
+                  </>
                 )}
               </div>
             ) : (
               <RsvpForm
                 token={token}
                 guestName={invitation.guest.fullName}
+                guestEmail={invitation.guest.email}
+                guestCompany={invitation.guest.company}
+                guestMobile={invitation.guest.mobile}
                 salutation={invitation.guest.salutation ?? undefined}
                 rsvpDeadline={formatDateTime(invitation.event.rsvpDeadline)}
                 enablePlusOne={invitation.event.enablePlusOne}

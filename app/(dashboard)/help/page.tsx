@@ -50,6 +50,7 @@ export default function HelpPage() {
             <h4 className="font-semibold text-sm mb-2">Event Settings</h4>
             <p className="text-sm text-muted-foreground">
               Access Settings in any event to configure RSVP form options or delete the event entirely.
+              Use Clone event on the overview to copy the venue, RSVP options, and email templates into a new date. Guests and seating are not copied.
             </p>
           </div>
         </div>
@@ -74,11 +75,18 @@ export default function HelpPage() {
             </p>
             <ul className="text-sm text-muted-foreground space-y-1 ml-4 mt-2">
               <li>• Full name and email address</li>
-              <li>• Phone number and salutation (Mr., Ms., Dr., etc.)</li>
+              <li>• Mobile number and salutation (Mr., Ms., Dr., etc.)</li>
+              <li>• Company / Publication</li>
               <li>• Guest category (VIP, Media, Sponsor, Speaker, General)</li>
               <li>• RSVP and attendance status</li>
               <li>• Dietary preferences and plus-one name (if enabled)</li>
             </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Saved contacts</h4>
+            <p className="text-sm text-muted-foreground">
+              Contacts is a shared address book. Search it from an event&apos;s Guests page with Add from contacts. If that email is already a guest, only the name, company, and mobile are updated. Use Save to contacts on a guest to store them for the next event. Deleting a contact does not remove them from events.
+            </p>
           </div>
           <div>
             <h4 className="font-semibold text-sm mb-2">Bulk Import</h4>
@@ -98,10 +106,11 @@ export default function HelpPage() {
           <div>
             <h4 className="font-semibold mb-2">Invitation Methods</h4>
             <p className="text-sm text-muted-foreground mb-3">
-              You can invite guests via email, QR code, or both:
+              You can invite guests via email, Viber, QR code, or both:
             </p>
             <ul className="text-sm text-muted-foreground space-y-1 ml-4">
               <li><strong>Email:</strong> Guests receive an email with an RSVP link</li>
+              <li><strong>Viber:</strong> On a guest row, choose Send Viber invite. Viber opens on this phone or laptop with that guest&apos;s number and the invitation ready to send. The guest needs a mobile number, and Viber must be installed.</li>
               <li><strong>QR Code:</strong> Generate and share QR codes for quick access to RSVP form</li>
               <li><strong>Both:</strong> Send both email and provide QR code option</li>
             </ul>
@@ -141,6 +150,18 @@ export default function HelpPage() {
               <li><strong>Pending:</strong> Invitation sent but no response</li>
               <li><strong>Expired:</strong> Past RSVP deadline, no response</li>
             </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Guest details on accept</h4>
+            <p className="text-sm text-muted-foreground">
+              When a guest accepts, they can confirm or correct their name, email, company or publication, and mobile number. Those updates are saved on their guest record.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-semibold text-sm mb-2">Add to calendar</h4>
+            <p className="text-sm text-muted-foreground">
+              After accepting, guests can add the event to Google Calendar or Apple Calendar. The same links are included in the confirmation email.
+            </p>
           </div>
           <div>
             <h4 className="font-semibold text-sm mb-2">Manual RSVP Override</h4>

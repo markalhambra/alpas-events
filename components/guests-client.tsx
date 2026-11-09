@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Search, Send, Trash2, MoreHorizontal, Edit, Download } from "lucide-react";
+import { Plus, Search, Send, Trash2, MoreHorizontal, Edit, Download, MessageCircle, BookUser, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +38,15 @@ import { GuestForm } from "@/components/guest-form";
 import { BulkImport } from "@/components/bulk-import";
 import { cn, getRsvpStatusColor, getCategoryColor, formatDate } from "@/lib/utils";
 
+function openViberApp(url: string) {
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.rel = "noopener";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
 interface Guest {
   id: string;
   fullName: string;
@@ -68,6 +77,12 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
   const [rsvpFilter, setRsvpFilter] = useState("ALL");
   const [addOpen, setAddOpen] = useState(false);
   const [editGuest, setEditGuest] = useState<Guest | null>(null);
+  const [viberInvite, setViberInvite] = useState<{ phone: string; message: string; viberUrl: string } | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactQuery, setContactQuery] = useState("");
+  const [contactResults, setContactResults] = useState<Array<{ id: string; fullName: string; email: string; company: string; designation: string }>>([]);
+  const [contactLoading, setContactLoading] = useState(false);
+  const [addingContactId, setAddingContactId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const isPast = new Date(eventDate) < new Date();
 
@@ -82,6 +97,56 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
     return matchSearch && matchCategory && matchRsvp;
   });
 
+  async function searchContacts(query: string) {
+    setContactQuery(query);
+    setContactLoading(true);
+    try {
+      const res = await fetch(`/api/contacts?q=${encodeURIComponent(query)}`);
+      const data = await res.json().catch(() => []);
+      setContactResults(Array.isArray(data) ? data : []);
+    } catch {
+      setContactResults([]);
+    } finally {
+      setContactLoading(false);
+    }
+  }
+
+  function openContactSearch() {
+    setContactOpen(true);
+    setContactQuery("");
+    void searchContacts("");
+  }
+
+  async function handleAddContact(contactId: string, email: string) {
+    setAddingContactId(contactId);
+    try {
+      const res = await fetch(`/api/events/${eventId}/guests/from-contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to add contact");
+      const already = initialGuests.some((guest) => guest.email.toLowerCase() === email.toLowerCase());
+      toast.success(data.action === "updated" || already ? "Guest updated from contact" : "Contact added to this event");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add contact");
+    } finally {
+      setAddingContactId(null);
+    }
+  }
+
+  async function handleSaveContact(guestId: string) {
+    const res = await fetch(`/api/events/${eventId}/guests/${guestId}/save-contact`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      toast.success(data.action === "updated" ? "Contact updated" : "Saved to contacts");
+    } else {
+      toast.error(data.error ?? "Failed to save contact");
+    }
+  }
+
   async function handleDelete(guestId: string) {
     if (!confirm("Delete this guest?")) return;
     const res = await fetch(`/api/events/${eventId}/guests/${guestId}`, { method: "DELETE" });
@@ -91,6 +156,34 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
     } else {
       toast.error("Failed to delete guest");
     }
+  }
+
+  async function handleSendViberInvite(guestId: string) {
+    const res = await fetch(`/api/events/${eventId}/guests/${guestId}/viber`, {
+      method: "POST",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast.error(data.error ?? "Failed to prepare Viber invite");
+      return;
+    }
+
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(data.message);
+      copied = true;
+    } catch {
+      copied = false;
+    }
+
+    setViberInvite({ phone: data.phone, message: data.message, viberUrl: data.viberUrl });
+    openViberApp(data.viberUrl);
+    toast.success(`Viber opened for ${data.phone}`, {
+      description: copied
+        ? "The invitation is ready to send. If the message box is empty, paste it."
+        : "If the message box is empty, use Open Viber again and allow clipboard access.",
+    });
+    router.refresh();
   }
 
   async function handleSendInvitation(guestId: string) {
@@ -218,6 +311,11 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
           </Button>
         )}
 
+        <Button variant="outline" onClick={openContactSearch}>
+          <BookUser className="h-4 w-4 mr-2" />
+          Add from contacts
+        </Button>
+
         <Button onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Guest
@@ -304,9 +402,20 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSaveContact(guest.id)}>
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Save to contacts
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleSendInvitation(guest.id)} disabled={isPast}>
                           <Send className="h-4 w-4 mr-2" />
-                          Send Invitation
+                          Send email invitation
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleSendViberInvite(guest.id)}
+                          disabled={isPast}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Send Viber invite
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
@@ -324,6 +433,88 @@ export function GuestsClient({ eventId, initialGuests, enablePlusOne, enableDiet
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!viberInvite} onOpenChange={(open) => !open && setViberInvite(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Viber invite for {viberInvite?.phone}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Viber should open a chat with this number and the invitation ready to send.
+            If the message box is empty, paste the text below.
+          </p>
+          <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-md border bg-muted/40 p-3 text-xs">
+            {viberInvite?.message}
+          </pre>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                if (!viberInvite) return;
+                try {
+                  await navigator.clipboard.writeText(viberInvite.message);
+                  toast.success("Invitation copied");
+                } catch {
+                  toast.error("Could not copy the invitation");
+                }
+              }}
+            >
+              Copy message
+            </Button>
+            <Button asChild>
+              <a href={viberInvite?.viberUrl ?? "#"}>Open Viber</a>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add from contacts</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              autoFocus
+              placeholder="Search name, email, or company..."
+              value={contactQuery}
+              onChange={(e) => searchContacts(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="max-h-80 overflow-auto border rounded-md">
+            {contactLoading ? (
+              <p className="p-4 text-sm text-muted-foreground">Searching...</p>
+            ) : contactResults.length === 0 ? (
+              <p className="p-4 text-sm text-muted-foreground">No saved contacts found.</p>
+            ) : (
+              contactResults.map((contact) => {
+                const onEvent = initialGuests.some(
+                  (guest) => guest.email.toLowerCase() === contact.email.toLowerCase()
+                );
+                return (
+                  <div key={contact.id} className="flex items-center justify-between gap-3 border-b last:border-0 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{contact.fullName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{contact.email} · {contact.company}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={onEvent ? "outline" : "default"}
+                      disabled={addingContactId === contact.id}
+                      onClick={() => handleAddContact(contact.id, contact.email)}
+                    >
+                      {addingContactId === contact.id ? "Saving..." : onEvent ? "Update" : "Add"}
+                    </Button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Guest Dialog */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

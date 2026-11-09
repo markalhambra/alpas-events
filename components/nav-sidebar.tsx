@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarDays,
-  Users,
+  BookUser,
   LogOut,
   Menu,
   X,
@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/events", label: "Events", icon: CalendarDays },
+  { href: "/contacts", label: "Contacts", icon: BookUser },
   { href: "/help", label: "Help", icon: HelpCircle },
 ];
 

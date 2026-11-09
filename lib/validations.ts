@@ -62,11 +62,33 @@ export const emailTemplateSchema = z.object({
   isDefault: z.boolean().default(false),
 });
 
-export const rsvpResponseSchema = z.object({
-  response: z.enum(["ACCEPTED", "DECLINED"]),
-  declineReason: z.string().max(500).optional(),
-  plusOneNames: z.array(z.string().max(100)).optional(),
-  dietaryPreference: z.string().max(255).optional(),
+export const rsvpResponseSchema = z
+  .object({
+    response: z.enum(["ACCEPTED", "DECLINED"]),
+    declineReason: z.string().max(500).optional(),
+    plusOneNames: z.array(z.string().max(100)).optional(),
+    dietaryPreference: z.string().max(255).optional(),
+    fullName: z.string().max(100).optional(),
+    email: z.string().max(255).optional(),
+    company: z.string().max(120).optional(),
+    mobile: z.string().max(30).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.response !== "ACCEPTED") return;
+    if (!data.fullName?.trim()) {
+      ctx.addIssue({ code: "custom", message: "Full name is required", path: ["fullName"] });
+    }
+    if (!data.email?.trim() || !z.string().email().safeParse(data.email.trim()).success) {
+      ctx.addIssue({ code: "custom", message: "A valid email is required", path: ["email"] });
+    }
+  });
+
+export const cloneEventSchema = z.object({
+  name: z.string().min(1, "Event name is required").max(150),
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().optional(),
+  rsvpDeadline: z.string().min(1, "RSVP deadline is required"),
 });
 
 export const rsvpOverrideSchema = z.object({
@@ -91,7 +113,18 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type NewPasswordInput = z.infer<typeof newPasswordSchema>;
 export type EventInput = z.infer<typeof eventSchema>;
+export const contactSchema = z.object({
+  fullName: z.string().min(1, "Full name is required").max(100),
+  designation: z.string().min(1, "Designation is required").max(80),
+  company: z.string().min(1, "Company / Publication is required").max(120),
+  mobile: z.string().max(30).optional(),
+  email: z.string().email("Invalid email address").max(255),
+  salutation: z.enum(["MR", "MS", "MRS", "DR", "ENGR", "ATTY", "PROF"]).optional(),
+  category: z.enum(["VIP", "MEDIA", "SPONSOR", "SPEAKER", "GENERAL"]).default("GENERAL"),
+});
+
 export type GuestInput = z.infer<typeof guestSchema>;
+export type ContactInput = z.infer<typeof contactSchema>;
 export type AdminUserInput = z.infer<typeof adminUserSchema>;
 export type EmailTemplateInput = z.infer<typeof emailTemplateSchema>;
 export type RsvpResponseInput = z.infer<typeof rsvpResponseSchema>;

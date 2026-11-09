@@ -67,6 +67,14 @@ export function InvitationsClient({ eventId, initialInvitations, eventDate }: In
     }
   }
 
+  function formatMethod(method: string) {
+    if (method === "VIBER") return "Viber";
+    if (method === "QR_CODE") return "QR Code";
+    if (method === "BOTH") return "Email + QR";
+    if (method === "EMAIL") return "Email";
+    return method;
+  }
+
   function getStatus(inv: Invitation) {
     if (inv.failedAt) return { label: "Failed", color: "bg-red-100 text-red-800" };
     if (inv.clickedAt) return { label: "Clicked", color: "bg-green-100 text-green-800" };
@@ -127,7 +135,7 @@ export function InvitationsClient({ eventId, initialInvitations, eventDate }: In
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">{inv.method}</span>
+                      <span className="text-sm">{formatMethod(inv.method)}</span>
                     </TableCell>
                     <TableCell>
                       <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", status.color)}>

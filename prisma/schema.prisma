@@ -25,6 +25,7 @@ enum InvitationMethod {
   EMAIL
   QR_CODE
   BOTH
+  VIBER
 }
 
 enum RsvpStatus {
@@ -162,8 +163,32 @@ model AdminUser {
   guestEdits          GuestChangeHistory[]
   attendanceOverrides AttendanceOverride[]
   rsvpOverrides       RsvpOverride[]
+  contacts            Contact[]
 
   @@map("admin_users")
+}
+
+// ============================================================
+// CONTACT (shared address book)
+// ============================================================
+
+model Contact {
+  id           String         @id @default(cuid())
+  fullName     String         @db.VarChar(100)
+  email        String         @unique @db.VarChar(255)
+  designation  String         @db.VarChar(80)
+  company      String         @db.VarChar(120)
+  mobile       String?        @db.VarChar(30)
+  salutation   Salutation?
+  category     GuestCategory  @default(GENERAL)
+
+  createdById  String?
+  createdBy    AdminUser?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("contacts")
 }
 
 // ============================================================

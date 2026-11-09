@@ -117,7 +117,7 @@ export function GuestForm({ eventId, guest, enablePlusOne = true, enableDietaryP
         </div>
         <div className="space-y-1">
           <Label>Mobile</Label>
-          <Input {...register("mobile")} placeholder="917xxxxxxx" />
+          <Input {...register("mobile")} placeholder="0917xxxxxxx or +63917xxxxxxx" />
           {errors.mobile && <p className="text-xs text-destructive">{errors.mobile.message}</p>}
         </div>
       </div>
@@ -129,8 +129,8 @@ export function GuestForm({ eventId, guest, enablePlusOne = true, enableDietaryP
           {errors.designation && <p className="text-xs text-destructive">{errors.designation.message}</p>}
         </div>
         <div className="space-y-1">
-          <Label>Company *</Label>
-          <Input {...register("company")} placeholder="Acme Corp" />
+          <Label>Company / Publication *</Label>
+          <Input {...register("company")} placeholder="Acme Corp or publication name" />
           {errors.company && <p className="text-xs text-destructive">{errors.company.message}</p>}
         </div>
       </div>

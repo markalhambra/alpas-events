@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, CheckSquare, Mail, TrendingUp, Calendar, MapPin, Clock } from "lucide-react";
 import { formatDate, formatDateTime, formatTimeAgo } from "@/lib/utils";
+import { CloneEventButton } from "@/components/clone-event-button";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -79,7 +80,10 @@ export default async function EventOverviewPage({ params }: PageProps) {
                   RSVP Deadline: {formatDateTime(event.rsvpDeadline)}
                 </p>
               </div>
-              <Badge variant="outline">{event.timezone}</Badge>
+              <div className="flex items-center gap-2">
+                <CloneEventButton eventId={event.id} eventName={event.name} venue={event.venue} />
+                <Badge variant="outline">{event.timezone}</Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
