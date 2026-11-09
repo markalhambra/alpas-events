@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { EventNav } from "@/components/event-nav";
 import { TemplatesClient } from "@/components/templates-client";
+import { ViberTemplateCard } from "@/components/viber-template-card";
 import { DefaultTemplatesClient } from "@/components/default-templates-client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -34,6 +35,8 @@ export default async function TemplatesPage({ params }: PageProps) {
           <h1 className="text-xl font-bold">Email Templates</h1>
           <p className="text-sm text-muted-foreground">{event.name}</p>
         </div>
+
+        <ViberTemplateCard eventId={id} initialTemplate={event.viberMessageTemplate} />
 
         <Tabs defaultValue="defaults" className="w-full">
           <TabsList>

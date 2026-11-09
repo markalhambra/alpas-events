@@ -110,7 +110,7 @@ export default function HelpPage() {
             </p>
             <ul className="text-sm text-muted-foreground space-y-1 ml-4">
               <li><strong>Email:</strong> Guests receive an email with an RSVP link</li>
-              <li><strong>Viber:</strong> On a guest row, choose Send Viber invite. Viber opens that guest&apos;s chat with a short invite and the RSVP link. Viber only inserts 100 characters, so the full invitation is also copied for you to paste. The guest needs a mobile number, and Viber must be installed.</li>
+              <li><strong>Viber:</strong> On a guest row, choose Send Viber invite. Viber opens that guest&apos;s chat with a short invite and the RSVP link. The full text you copy comes from the Viber message on that event&apos;s Templates page. Viber only inserts 100 characters from a link, so paste the copied message if you want every line. The guest needs a mobile number, and Viber must be installed.</li>
               <li><strong>QR Code:</strong> Generate and share QR codes for quick access to RSVP form</li>
               <li><strong>Both:</strong> Send both email and provide QR code option</li>
             </ul>

@@ -94,20 +94,45 @@ export function buildViberDraft(data: ViberInvitationInput): string {
   return url.length <= VIBER_DRAFT_LIMIT ? url : url.slice(-VIBER_DRAFT_LIMIT);
 }
 
-export function buildViberInvitationMessage(data: ViberInvitationInput): string {
-  const title = data.salutation ? SALUTATION_LABEL[data.salutation] ?? data.salutation : "";
-  const greeting = [title, data.guestName].filter(Boolean).join(" ");
+export const DEFAULT_VIBER_MESSAGE_TEMPLATE = `Hi {{salutation}} {{guestName}}, you're invited to {{eventName}}.
 
-  return [
-    `Hi ${greeting}, you're invited to ${data.eventName}.`,
-    "",
-    `Date: ${data.eventDate}`,
-    `Time: ${data.eventTime}`,
-    `Venue: ${data.venue}`,
-    `RSVP by: ${data.rsvpDeadline}`,
-    "",
-    `Please confirm here: ${data.rsvpUrl}`,
-  ].join("\n");
+Date: {{eventDate}}
+Time: {{eventTime}}
+Venue: {{venue}}
+RSVP by: {{rsvpDeadline}}
+
+Please confirm here: {{rsvpUrl}}`;
+
+export const VIBER_TEMPLATE_PLACEHOLDERS = [
+  "{{guestName}}",
+  "{{salutation}}",
+  "{{eventName}}",
+  "{{eventDate}}",
+  "{{eventTime}}",
+  "{{venue}}",
+  "{{rsvpDeadline}}",
+  "{{rsvpUrl}}",
+] as const;
+
+export function renderViberMessage(template: string | null | undefined, data: ViberInvitationInput): string {
+  const source = template?.trim() ? template : DEFAULT_VIBER_MESSAGE_TEMPLATE;
+  const title = data.salutation ? SALUTATION_LABEL[data.salutation] ?? data.salutation : "";
+  const values: Record<string, string> = {
+    guestName: data.guestName,
+    salutation: title,
+    eventName: data.eventName,
+    eventDate: data.eventDate,
+    eventTime: data.eventTime,
+    venue: data.venue,
+    rsvpDeadline: data.rsvpDeadline,
+    rsvpUrl: data.rsvpUrl,
+    acceptUrl: data.rsvpUrl,
+  };
+  return source
+    .replace(/\{\{(\w+)\}\}/g, (_, key: string) => values[key] ?? "")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
 }
 
 /**

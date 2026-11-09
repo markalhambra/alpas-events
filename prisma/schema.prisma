@@ -116,6 +116,7 @@ model Event {
   // RSVP form options
   enablePlusOne           Boolean   @default(false)
   enableDietaryPreference Boolean   @default(false)
+  viberMessageTemplate    String?   @db.Text
 
   // Module auto-unlock override
   attendanceUnlockedAt DateTime? // Set by Super Admin for early unlock

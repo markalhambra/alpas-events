@@ -51,6 +51,7 @@ export async function POST(request: NextRequest, { params }: Params) {
           rsvpDeadline,
           enablePlusOne: source.enablePlusOne,
           enableDietaryPreference: source.enableDietaryPreference,
+          viberMessageTemplate: source.viberMessageTemplate,
           createdById: auth.admin.id,
         },
       });

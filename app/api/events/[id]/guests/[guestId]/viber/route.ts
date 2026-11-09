@@ -6,7 +6,7 @@ import {
   buildShortRsvpUrl,
   buildViberChatUrl,
   buildViberDraft,
-  buildViberInvitationMessage,
+  renderViberMessage,
   formatViberNumber,
   toViberNumber,
 } from "@/lib/viber";
@@ -89,7 +89,7 @@ export async function POST(_: NextRequest, { params }: Params) {
       rsvpDeadline: formatDateTime(event.rsvpDeadline),
       rsvpUrl,
     };
-    const message = buildViberInvitationMessage(invite);
+    const message = renderViberMessage(event.viberMessageTemplate, invite);
     const draft = buildViberDraft(invite);
     const phone = formatViberNumber(viberDigits);
 
